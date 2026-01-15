@@ -87,6 +87,8 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation "com.github.DeepBlueRobotics:lib199:2026-SNAPSHOT" //FIXME: change to a release when 2026 gets merged
+    //Uncomment to use a local version of lib199
+    // implementation project(':lib199')
 }
 
 test {
