@@ -73,8 +73,8 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -404,12 +404,12 @@ public class Drivetrain extends SubsystemBase {
         for (SparkMax turnMotor : turnMotors) {
             SparkMaxConfig config = new SparkMaxConfig();
             config.idleMode(mode);
-            turnMotor.configure(config, SparkBase.ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);      
+            turnMotor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);      
         }
         for (SparkFlex driveMotor : driveMotors) {
             SparkMaxConfig config = new SparkMaxConfig();
             config.idleMode(mode);
-            driveMotor.configure(config, SparkBase.ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);     
+            driveMotor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);     
         }
     }
 
