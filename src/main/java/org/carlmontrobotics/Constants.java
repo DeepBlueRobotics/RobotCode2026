@@ -51,6 +51,7 @@ public final class Constants {
 		public static final class Manipulator {
 			public static final int port = 1;
 			public static final int Y = Button.kY.value;
+			public static final int INTAKE_BUTTON = Button.kA.value; //get real button later
         }
 
 		public static final double JOY_THRESH = 0.13;
@@ -267,6 +268,10 @@ public final class Constants {
 
 		public static final int[] sampleLL1_VALID_IDS = {1, 2, 12, 13};
 		public static final int[] sampleLL2_VALID_IDS = {1, 6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22};
+	}
+	public static final class IntakeC { // get real values later
+		public static final int INTAKE_ID = 1;
+		public static final double INTAKE_SPEED = 0.1;
 	}
 }
 //#endregion

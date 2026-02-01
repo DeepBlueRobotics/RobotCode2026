@@ -8,9 +8,6 @@ package org.carlmontrobotics;
 //199 files
 import org.carlmontrobotics.subsystems.*;
 
-
-import org.carlmontrobotics.commands.DriveCommands.TeleopDrive;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +50,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-//constats
+//constants
 import org.carlmontrobotics.Constants.OI;
 import org.carlmontrobotics.Constants.OI.Driver;
 import org.carlmontrobotics.Constants.OI.Manipulator;
@@ -63,7 +60,8 @@ import org.carlmontrobotics.Constants.Drivetrainc.Autoc;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-
+import org.carlmontrobotics.commands.DriveCommands.TeleopDrive;
+import org.carlmontrobotics.commands.IntakeCommands.IntakeBalls;
 
 public class RobotContainer {
     
@@ -74,6 +72,7 @@ public class RobotContainer {
     public final Limelight limelight = new Limelight();
     public final Drivetrain drivetrain =  new Drivetrain(limelight);
 
+    public final Intake intake = new Intake();
 
     private SendableChooser<Command> autoChooser = new SendableChooser<>();   
     public boolean alignOverride = true;
@@ -116,7 +115,10 @@ public class RobotContainer {
             .onFalse(new InstantCommand(() -> drivetrain.setExtraSpeedMult(0)));        
     }
 
-    private void setBindingsManipulator() {}
+    private void setBindingsManipulator() {
+      new JoystickButton(manipulatorController, Manipulator.INTAKE_BUTTON)
+        .whileTrue(new IntakeBalls(intake));
+    }
     //#endregion
     //#region AutoMaking
     private void RegisterAutoCommands() {}
