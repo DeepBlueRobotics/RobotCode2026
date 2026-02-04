@@ -52,6 +52,7 @@ public final class Constants {
 			public static final int port = 1;
 			public static final int Y = Button.kY.value;
 			public static final int INTAKE_BUTTON = Button.kA.value; //get real button later
+            public static final int OUTTAKE_BUTTON = Button.kB.value; //get real button later
         }
 
 		public static final double JOY_THRESH = 0.13;
@@ -269,9 +270,17 @@ public final class Constants {
 		public static final int[] sampleLL1_VALID_IDS = {1, 2, 12, 13};
 		public static final int[] sampleLL2_VALID_IDS = {1, 6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22};
 	}
-	public static final class IntakeC { // get real values later
+	//#region Manipulator
+	public static final class IntakeC { // FIXME get real values for intake and outtake
 		public static final int INTAKE_ID = 1;
 		public static final double INTAKE_SPEED = 0.1;
+	}
+	public static final class OuttakeC { 
+		public static final int OUTTAKE_ID = 14;
+		public static final double OUTTAKE_SPEED = 0.2;
+		public static final double OUTTAKE_KP = 0.01;
+		public static final double OUTTAKE_KI = 0.01;
+		public static final double OUTTAKE_KD = 0.01;
 	}
 }
 //#endregion

@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+
 //control bindings
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
@@ -52,6 +53,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 //constants
 import org.carlmontrobotics.Constants.OI;
+import org.carlmontrobotics.Constants.OuttakeC;
 import org.carlmontrobotics.Constants.OI.Driver;
 import org.carlmontrobotics.Constants.OI.Manipulator;
 import org.carlmontrobotics.Constants.Drivetrainc.Autoc;
@@ -62,6 +64,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import org.carlmontrobotics.commands.DriveCommands.TeleopDrive;
 import org.carlmontrobotics.commands.IntakeCommands.IntakeBalls;
+import org.carlmontrobotics.commands.OuttakeCommands.ShootBalls;
 
 public class RobotContainer {
     
@@ -73,6 +76,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain =  new Drivetrain(limelight);
 
     public final Intake intake = new Intake();
+    public final Outtake outtake = new Outtake(OuttakeC.OUTTAKE_KP, OuttakeC.OUTTAKE_KI, OuttakeC.OUTTAKE_KD);
 
     private SendableChooser<Command> autoChooser = new SendableChooser<>();   
     public boolean alignOverride = true;
@@ -118,6 +122,8 @@ public class RobotContainer {
     private void setBindingsManipulator() {
       new JoystickButton(manipulatorController, Manipulator.INTAKE_BUTTON)
         .whileTrue(new IntakeBalls(intake));
+        new JoystickButton(manipulatorController, Manipulator.OUTTAKE_BUTTON)
+        .whileTrue(new ShootBalls(outtake));
     }
     //#endregion
     //#region AutoMaking

@@ -18,9 +18,9 @@ public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
   public Intake() {
     SparkMax intake = MotorControllerFactory.createSparkMax(IntakeC.INTAKE_ID, MotorConfig.NEO);
-  }
 
-  //FIXME add configs
+    //FIXME add configs if needed
+  }
 
   public void spinIntake(double intakeSpeed) {
     intake.set(intakeSpeed);
