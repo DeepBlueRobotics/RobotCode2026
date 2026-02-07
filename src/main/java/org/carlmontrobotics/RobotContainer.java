@@ -63,8 +63,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import org.carlmontrobotics.commands.DriveCommands.TeleopDrive;
-import org.carlmontrobotics.commands.IntakeCommands.IntakeBalls;
-import org.carlmontrobotics.commands.OuttakeCommands.ShootBalls;
+import org.carlmontrobotics.commands.ManipulatorCommands.IntakeBalls;
+import org.carlmontrobotics.commands.ManipulatorCommands.ShootBalls;
 
 public class RobotContainer {
     

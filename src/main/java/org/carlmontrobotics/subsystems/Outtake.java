@@ -4,13 +4,14 @@
 
 package org.carlmontrobotics.subsystems;
 
-import org.carlmontrobotics.lib199.MotorConfig;
 import org.carlmontrobotics.lib199.MotorControllerFactory;
 
 import org.carlmontrobotics.Constants.OuttakeC;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkFlex;
@@ -30,14 +31,15 @@ public class Outtake extends SubsystemBase {
     this.kI = kI;
     this.kD = kD;
     outtake = MotorControllerFactory.createSparkFlex(OuttakeC.OUTTAKE_ID);
-
+    pidController = outtake.getClosedLoopController();
     final SparkFlexConfig outtakeConfig = new SparkFlexConfig();
     outtakeConfig.idleMode(IdleMode.kCoast);
-    outtakeConfig.closedLoop.pid(kP,kI,kD).feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
+    outtakeConfig.closedLoop.pid(kP,kI,kD).feedbackSensor(FeedbackSensor.kPrimaryEncoder);
+    outtake.configure(outtakeConfig, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   public void spinOuttake(double input) {
-    pidController.setReference(input, ControlType.kDutyCycle);
+    pidController.setSetpoint(input, ControlType.kDutyCycle);
   }
 
   @Override
