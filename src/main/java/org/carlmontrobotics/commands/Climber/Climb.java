@@ -14,24 +14,34 @@ import edu.wpi.first.wpilibj2.command.Command;
 public class Climb extends Command {
   /** Creates a new Climb. */
   Climber climber;
+  int bestCounterEver;
   public Climb(Climber climber, int level) {
     this.climber = climber;
+    bestCounterEver = 0;
     addRequirements(climber);
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
   private void climbL1(){
-    climber.setGoal(MAX_HEIGHT_GOAL);
-    if(climber.atGoal() == true){
-      climber.setGoal(L1_CLIMB_HEIGHT);
+    if(climber.atGoal()){
+       climber.setGoal(L1_CLIMB_HEIGHT);
+      }
+      else if(!(climber.getGoal() == L1_CLIMB_HEIGHT)){
+        climber.setGoal(MAX_HEIGHT_GOAL);
+      }
     }
-  }
 
   private void climbL3(){
-    for(int i = 0; i < 4; i++){climber.setGoal(MAX_HEIGHT_GOAL);
-    if(climber.atGoal() == true){
+    if(climber.atGoal() && bestCounterEver > 6){
+    return;
+    }
+    if(climber.getGoal() == MAX_HEIGHT_GOAL && climber.atGoal()){
       climber.setGoal(MIN_HEIGHT_GOAL);
-      }
+      bestCounterEver++;
+    }
+    if(climber.getGoal() == MIN_HEIGHT_GOAL && climber.atGoal()){
+      climber.setGoal(MAX_HEIGHT_GOAL);
+      bestCounterEver++;
     }
   }
 
