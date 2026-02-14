@@ -4,6 +4,7 @@
 
 package org.carlmontrobotics.subsystems;
 
+import org.carlmontrobotics.lib199.MotorConfig;
 import org.carlmontrobotics.lib199.MotorControllerFactory;
 
 import org.carlmontrobotics.Constants.OuttakeC;
@@ -15,12 +16,13 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.SparkClosedLoopController;
 
 public class Outtake extends SubsystemBase {
-  SparkFlex outtake;
+  SparkMax outtake;
   private double kP;
   private double kI;
   private double kD;
@@ -30,7 +32,7 @@ public class Outtake extends SubsystemBase {
     this.kP = kP;
     this.kI = kI;
     this.kD = kD;
-    outtake = MotorControllerFactory.createSparkFlex(OuttakeC.OUTTAKE_ID);
+    outtake = MotorControllerFactory.createSparkMax(OuttakeC.OUTTAKE_ID, MotorConfig.NEO);
     pidController = outtake.getClosedLoopController();
     final SparkFlexConfig outtakeConfig = new SparkFlexConfig();
     outtakeConfig.idleMode(IdleMode.kCoast);
@@ -39,11 +41,10 @@ public class Outtake extends SubsystemBase {
   }
 
   public void spinOuttake(double input) {
-    pidController.setSetpoint(input, ControlType.kDutyCycle);
+    pidController.setSetpoint(input, ControlType.kVelocity);
   }
 
   @Override
-  public void periodic() {
+  public void periodic() {}
     // This method will be called once per scheduler run
-  }
 }

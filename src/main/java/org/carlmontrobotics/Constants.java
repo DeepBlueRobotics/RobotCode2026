@@ -277,10 +277,10 @@ public final class Constants {
 	}
 	public static final class OuttakeC { 
 		public static final int OUTTAKE_ID = 14;
-		public static final double OUTTAKE_SPEED = 0.2;
-		public static final double OUTTAKE_KP = 0.05;
-		public static final double OUTTAKE_KI = 0.01;
-		public static final double OUTTAKE_KD = 0.01;
+		public static final double OUTTAKE_RPM = 60;
+		public static final double OUTTAKE_KP = 0.01;
+		public static final double OUTTAKE_KI = 0;
+		public static final double OUTTAKE_KD = 0;
 	}
 }
 //#endregion

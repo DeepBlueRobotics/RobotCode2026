@@ -22,7 +22,7 @@ public class ShootBalls extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    outtake.spinOuttake(OuttakeC.OUTTAKE_SPEED);
+    outtake.spinOuttake(OuttakeC.OUTTAKE_RPM);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
