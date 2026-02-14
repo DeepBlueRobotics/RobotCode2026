@@ -4,22 +4,29 @@
 
 package org.carlmontrobotics.subsystems;
 
-import org.carlmontrobotics.lib199.MotorConfig;
 import org.carlmontrobotics.lib199.MotorControllerFactory;
 
 import org.carlmontrobotics.Constants.IntakeC;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
 
 public class Intake extends SubsystemBase {
-  SparkMax intake;
+  SparkFlex intake;
   /** Creates a new Intake. */
   public Intake() {
-    SparkMax intake = MotorControllerFactory.createSparkMax(IntakeC.INTAKE_ID, MotorConfig.NEO);
+    intake = MotorControllerFactory.createSparkFlex(IntakeC.INTAKE_ID);
 
-    //FIXME add configs if needed
+    final SparkFlexConfig intakeConfig = new SparkFlexConfig();
+    intakeConfig.idleMode(IdleMode.kCoast);
+    intake.configure(intakeConfig, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   public void spinIntake(double intakeSpeed) {
@@ -29,5 +36,6 @@ public class Intake extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    SmartDashboard.putNumber("Intake Speed", intake.get());
   }
 }

@@ -14,8 +14,7 @@ public class IntakeBalls extends Command {
   Intake intake;
   /** Creates a new IntakeBalls. */
   public IntakeBalls(Intake intake) {
-    this.intake = intake;
-    // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(this.intake = intake);
   }
 
   // Called when the command is initially scheduled.

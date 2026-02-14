@@ -271,16 +271,19 @@ public final class Constants {
 		public static final int[] sampleLL2_VALID_IDS = {1, 6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22};
 	}
 	//#region Manipulator
-	public static final class IntakeC { // FIXME get real values
+	public static final class IntakeC { // FIXME get real values for intake and outtake
 		public static final int INTAKE_ID = 1;
 		public static final double INTAKE_SPEED = 0.1;
 	}
 	public static final class OuttakeC { 
-		public static final int OUTTAKE_ID = 14;
+		public static final int OUTTAKE_ID = 2;
+		public static final int FEEDER_ID = 3;
 		public static final double OUTTAKE_SPEED = 0.2;
-		public static final double OUTTAKE_KP = 0.05;
+		public static final double FEEDER_SPEED = 0.2;
+		public static final double OUTTAKE_KP = 0.01;
 		public static final double OUTTAKE_KI = 0.01;
 		public static final double OUTTAKE_KD = 0.01;
+		public static final double DELAY = 0.5;
 	}
 }
 //#endregion

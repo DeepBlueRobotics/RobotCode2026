@@ -76,7 +76,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain =  new Drivetrain(limelight);
 
     public final Intake intake = new Intake();
-    public final Outtake outtake = new Outtake(OuttakeC.OUTTAKE_KP, OuttakeC.OUTTAKE_KI, OuttakeC.OUTTAKE_KD);
+    public final Outtake outtake = new Outtake();
 
     private SendableChooser<Command> autoChooser = new SendableChooser<>();   
     public boolean alignOverride = true;
@@ -89,9 +89,6 @@ public class RobotContainer {
 
         SmartDashboard.putData("Auto Chooser", autoChooser); 
 
-        SmartDashboard.putBoolean("AlignOverride", alignOverride);
-        SmartDashboard.putBoolean("AutoScoring", autoScoring);
-        SmartDashboard.putBoolean("AlignOverride", true);
         //#endregion
         setDefaultCommands();
         setBindingsDriver();
@@ -123,7 +120,7 @@ public class RobotContainer {
       new JoystickButton(manipulatorController, Manipulator.INTAKE_BUTTON)
         .whileTrue(new IntakeBalls(intake));
         new JoystickButton(manipulatorController, Manipulator.OUTTAKE_BUTTON)
-        .whileTrue(new ShootBalls(outtake));
+        .whileTrue(new ShootBalls(outtake, outtake));
     }
     //#endregion
     //#region AutoMaking

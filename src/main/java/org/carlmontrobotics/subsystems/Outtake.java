@@ -10,8 +10,6 @@ import org.carlmontrobotics.Constants.OuttakeC;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkFlex;
@@ -20,26 +18,25 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.SparkClosedLoopController;
 
 public class Outtake extends SubsystemBase {
-  SparkFlex outtake;
-  private double kP;
-  private double kI;
-  private double kD;
+  public SparkFlex outtake;
+  public SparkFlex feeder;
   private SparkClosedLoopController pidController;
   /** Creates a new Outtake. */
-  public Outtake(double kP, double kI, double kD) {
-    this.kP = kP;
-    this.kI = kI;
-    this.kD = kD;
+  public Outtake() {
     outtake = MotorControllerFactory.createSparkFlex(OuttakeC.OUTTAKE_ID);
-    pidController = outtake.getClosedLoopController();
+    feeder = MotorControllerFactory.createSparkFlex(OuttakeC.FEEDER_ID);
+
     final SparkFlexConfig outtakeConfig = new SparkFlexConfig();
     outtakeConfig.idleMode(IdleMode.kCoast);
-    outtakeConfig.closedLoop.pid(kP,kI,kD).feedbackSensor(FeedbackSensor.kPrimaryEncoder);
-    outtake.configure(outtakeConfig, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+    outtakeConfig.closedLoop.pid(OuttakeC.OUTTAKE_KP, OuttakeC.OUTTAKE_KI, OuttakeC.OUTTAKE_KD);
   }
 
   public void spinOuttake(double input) {
     pidController.setSetpoint(input, ControlType.kDutyCycle);
+  }
+
+  public void spinFeeder(double input) {
+    feeder.set(input);
   }
 
   @Override
