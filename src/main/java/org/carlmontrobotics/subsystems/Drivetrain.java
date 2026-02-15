@@ -1,9 +1,40 @@
 package org.carlmontrobotics.subsystems;
 
+import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Rotation;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volt;
+import static edu.wpi.first.units.Units.Volts;
+import static org.carlmontrobotics.Config.CONFIG;
+import static org.carlmontrobotics.Constants.Drivetrainc.COLLISION_ACCELERATION_THRESHOLD;
+import static org.carlmontrobotics.Constants.Drivetrainc.driveBackLeftPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.driveBackRightPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.driveFrontLeftPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.driveFrontRightPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.driveGearing;
+import static org.carlmontrobotics.Constants.Drivetrainc.isGyroReversed;
+import static org.carlmontrobotics.Constants.Drivetrainc.maxSpeed;
+import static org.carlmontrobotics.Constants.Drivetrainc.secsPer12Volts;
+import static org.carlmontrobotics.Constants.Drivetrainc.trackWidth;
+import static org.carlmontrobotics.Constants.Drivetrainc.turnBackLeftPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.turnBackRightPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.turnFrontLeftPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.turnFrontRightPort;
+import static org.carlmontrobotics.Constants.Drivetrainc.turnGearing;
+import static org.carlmontrobotics.Constants.Drivetrainc.wheelBase;
+import static org.carlmontrobotics.Constants.Drivetrainc.wheelDiameterMeters;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Supplier;
 
+//Constants
+import org.carlmontrobotics.Constants;
+import org.carlmontrobotics.commands.DriveCommands.RotateToFieldRelativeAngle;
+import org.carlmontrobotics.commands.DriveCommands.TeleopDrive;
 //lib199
 import org.carlmontrobotics.lib199.MotorConfig;
 import org.carlmontrobotics.lib199.MotorControllerFactory;
@@ -11,22 +42,52 @@ import org.carlmontrobotics.lib199.SensorFactory;
 import org.carlmontrobotics.lib199.swerve.SwerveModule;
 import org.carlmontrobotics.lib199.swerve.SwerveModuleSim;
 
-import static org.carlmontrobotics.Config.CONFIG;
+import com.ctre.phoenix6.hardware.CANcoder;
+//pathplanner
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.PathPlannerLogging;
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.hal.SimDouble;
-
+//math
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutDistance;
+import edu.wpi.first.units.measure.MutLinearVelocity;
+import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
-
 //wpilib
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -36,85 +97,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
-//math
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.math.controller.PIDController;
-
-//vendordeps
-import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.studica.frc.AHRS;
-import com.studica.frc.AHRS.NavXComType;
-
-//pathplanner
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.util.PathPlannerLogging;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-
-//rev
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.PersistMode;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.ClosedLoopConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
-//units
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.MutAngle;
-import edu.wpi.first.units.measure.MutAngularVelocity;
-import edu.wpi.first.units.measure.MutDistance;
-import edu.wpi.first.units.measure.MutLinearVelocity;
-import edu.wpi.first.units.measure.MutVoltage;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.MutableMeasure;
-import edu.wpi.first.units.measure.Velocity;
-import edu.wpi.first.units.measure.Voltage;
-
-import static edu.wpi.first.units.Units.Volts;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Rotation;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Volt;
-import static edu.wpi.first.units.Units.Meter;
-import static edu.wpi.first.units.Units.Meters;
-
-//Constants
-import org.carlmontrobotics.Constants;
-import org.carlmontrobotics.Constants.Drivetrainc;
-import org.carlmontrobotics.Constants.Drivetrainc.Autoc;
-import org.carlmontrobotics.Robot;
-import org.carlmontrobotics.subsystems.Limelight;
-import org.carlmontrobotics.commands.DriveCommands.RotateToFieldRelativeAngle;
-import org.carlmontrobotics.commands.DriveCommands.TeleopDrive;
-import static org.carlmontrobotics.Constants.Drivetrainc.*;
-import static org.carlmontrobotics.Constants.LimeLightc.*;
 
 public class Drivetrain extends SubsystemBase {
 
@@ -415,123 +397,17 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void periodic() {
-        detectCollision(); //This does nothing
         PathPlannerLogging.logCurrentPose(getPose());
-
-        //maybe add the field with the position of the robot with only limelight and the field with the position of the robot with only odometry?
-        //We can compare the two fields to see if odometry is causing the pose to be inaccurate when it hits the reef.
-
-        // SmartDashboard.getNumber("GoalPos", turnEncoders[0].getVelocity().getValueAsDouble());
-        // SmartDashboard.putNumber("FL Motor Val", turnMotors[0].getEncoder().getPosition());
-        // double goal = SmartDashboard.getNumber("GoalPos", 0);
-        // PIDController pid = new PIDController(kP, kI, kD);
-        // kP = SmartDashboard.getNumber("kP", 0);
-        // kI = SmartDashboard.getNumber("kI", 0);
-        // kD = SmartDashboard.getNumber("kD", 0);
-        //pid.setIZone(20);
-        //SmartDashboard.putBoolean("atgoal", pid.atSetpoint());
-        // SparkMaxConfig config = new SparkMaxConfig();
-        
-        //config.closedLoop.feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        // System.out.println(kP);
-        // config.closedLoop.pid(kP ,kI,kD);
-        // config.encoder.positionConversionFactor(360/Constants.Drivetrainc.turnGearing);
-        // turnMotors[0].configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        // //moduleFL.move(0.0000001, 180);
-        //moduleFL.move(0.01, 180);
-        // moduleFR.move(0.000000001, 0);
-        // moduleBR.move(0.0000001, 0);
-        // moduleFL.move(0.000001, 0);
-        // moduleBL.move(0.000001, 0);
-        // turnPidControllers[0].setReference(goal
-
-        // , ControlType.kPosition, ClosedLoopSlot.kSlot0);
-        
-        
-        // 167 -> -200
-        // 138 -> 360
-        // for (CANcoder coder : turnEncoders) {
-        //     SignalLogger.writeDouble("Regular position " + coder.toString(),
-        //     coder.getPosition().getValue().baseUnitMagnitude());
-        //     SignalLogger.writeDouble("Velocity " + coder.toString(),
-        //     coder.getVelocity().getValue().baseUnitMagnitude());
-        //     SignalLogger.writeDouble("Absolute position " + coder.toString(),
-        //     coder.getAbsolutePosition().getValue().baseUnitMagnitude());
-        // }
-        // String out=""; int i=0;
-        // for (CANcoder coder : turnEncoders) {
-        //     out+=String.format("[i] Abs Pos: %.3f Goal Pos: %.3f ", coder.getAbsolutePosition().getValue().baseUnitMagnitude(),0);
-        //     i++;
-        // }
-        // lobotomized to prevent ucontrollabe swerve behavior
-        // turnMotors[2].setVoltage(SmartDashboard.getNumber("kS", 0));
-        // moduleFL.periodic();
-        // moduleFR.periodic();
-        // moduleBL.periodic();
-        // moduleBR.periodic();
-        double goal = SmartDashboard.getNumber("bigoal", 0);
         for (SwerveModule module : modules) {
           // module.turnPeriodic();
           // module.turnPeriodic();
-          module.move(0.00000000001, goal);
           module.periodic();
         }
-
-        // field.setRobotPose(odometry.getPoseMeters());
-
-        
-
-        // odometry.update(gyro.getRotation2d(), getModulePositions());
-
-        // poseEstimator.update(gyro.getRotation2d(), getModulePositions());
-        
-        //odometry.update(Rotation2d.fromDegrees(getHeading()), getModulePositions());
-
-        // updateMT2PoseEstimator();
-
-        // double currSetX =
-        // SmartDashboard.getNumber("Pose Estimator set x (m)", lastSetX);
-        // double currSetY =
-        // SmartDashboard.getNumber("Pose Estimator set y (m)", lastSetY);
-        // double currSetTheta = SmartDashboard
-        // .getNumber("Pose Estimator set rotation (deg)", lastSetTheta);
-
-        // if (lastSetX != currSetX || lastSetY != currSetY
-        // || lastSetTheta != currSetTheta) {
-        // setPose(new Pose2d(currSetX, currSetY,
-        // Rotation2d.fromDegrees(currSetTheta)));
-        // }
-
-        // setPose(new Pose2d(getPose().getTranslation().getX(),
-        // getPose().getTranslation().getY(),
-        // Rotation2d.fromDegrees(getHeading())));
-
-
-        // SmartDashboard.putNumber("X position with limelight", getPoseWithLimelight().getX());
-        // SmartDashboard.putNumber("Y position with limelight", getPoseWithLimelight().getY());
-        SmartDashboard.putNumber("X position with gyro", getPose().getX());
-        SmartDashboard.putNumber("Y position with gyro", getPose().getY());
-        SmartDashboard.putData(CONFIG);
-        
-        //For finding acceleration of drivetrain for collision detector
-        SmartDashboard.putNumber("Accel X", accelX);
-        SmartDashboard.putNumber("Accel Y", accelY);
-        SmartDashboard.putNumber("2D Acceleration ", accelXY);
-
-        // // // SmartDashboard.putNumber("Pitch", gyro.getPitch());
-        // // // SmartDashboard.putNumber("Roll", gyro.getRoll());
-        // SmartDashboard.putNumber("Raw gyro angle", gyro.getAngle());
-        // SmartDashboard.putNumber("Robot Heading", getHeading());
-        // // // SmartDashboard.putNumber("AdjRoll", gyro.getPitch() - initPitch);
-        // // // SmartDashboard.putNumber("AdjPitch", gyro.getRoll() - initRoll);
-        // SmartDashboard.putBoolean("Field Oriented", fieldOriented);
-        // SmartDashboard.putNumber("Gyro Compass Heading", gyro.getCompassHeading());
-        // SmartDashboard.putNumber("Compass Offset", compassOffset);
-        // SmartDashboard.putBoolean("Current Magnetic Field Disturbance", gyro.isMagneticDisturbance());
         SmartDashboard.putNumber("front left encoder", moduleFL.getModuleAngle());
         SmartDashboard.putNumber("front right encoder", moduleFR.getModuleAngle());
         SmartDashboard.putNumber("back left encoder", moduleBL.getModuleAngle());
         SmartDashboard.putNumber("back right encoder", moduleBR.getModuleAngle());
+        updateVelocity();
     }
 
     @Override
@@ -1327,5 +1203,40 @@ public class Drivetrain extends SubsystemBase {
      */
     public double getGyroRate() {
         return gyro.getRate();
+    }
+
+    public Pose2d getDrivetrainPosition() {
+        return poseEstimator.getEstimatedPosition();
+    }
+
+    public double[] getDrivetrainVelocity() {
+        double [] info = {drivetrainVX, drivetrainVY, drivetrainVR};
+        return info;
+    }
+
+    Pose2d lastPose;
+    double lastTime;
+    /** X direction velocity: m/s*/
+    private double drivetrainVX;
+    /** Y direction velocity: m/s */
+    private double drivetrainVY;
+    /** Rotation velocity: rad/s */
+    private double drivetrainVR;
+
+    private void updateVelocity() {
+        Pose2d currentPose = poseEstimator.getEstimatedPosition();
+        double now = Timer.getFPGATimestamp();
+
+        double dt = now - lastTime;
+        Translation2d delta = currentPose.getTranslation().minus(lastPose.getTranslation());
+
+        drivetrainVX = delta.getX() / dt;
+        drivetrainVY = delta.getY() / dt;
+
+        drivetrainVR =
+            currentPose.getRotation().minus(lastPose.getRotation()).getRadians() / dt;
+
+        lastPose = currentPose;
+        lastTime = now;
     }
 }

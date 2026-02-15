@@ -268,5 +268,16 @@ public final class Constants {
 		public static final int[] sampleLL1_VALID_IDS = {1, 2, 12, 13};
 		public static final int[] sampleLL2_VALID_IDS = {1, 6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22};
 	}
+
+	public static class Shooterc {
+		public static final int masterID = 1;
+		public static final boolean masterInverted = false;
+		public static final int followerID = 2;
+		public static final double kP = 2;
+		public static final double kI = 0;
+		public static final double kD = 0; 
+		public static final double gearReduction = 1;
+		public static final double launchAngleRad = Math.PI/4;
+	}
 }
 //#endregion
