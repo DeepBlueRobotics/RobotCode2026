@@ -276,14 +276,14 @@ public final class Constants {
 		public static final double INTAKE_SPEED = 0.1;
 	}
 	public static final class OuttakeC { 
-		public static final int OUTTAKE_ID = 2;
-		public static final int FEEDER_ID = 3;
-		public static final double OUTTAKE_SPEED = 0.2;
-		public static final double FEEDER_SPEED = 0.2;
+		public static final int OUTTAKE_ID = 14;
+		public static final int FEEDER_ID = 2;
+		public static final double OUTTAKE_RPM = 60;
 		public static final double OUTTAKE_KP = 0.01;
-		public static final double OUTTAKE_KI = 0.01;
-		public static final double OUTTAKE_KD = 0.01;
-		public static final double DELAY = 0.5;
+		public static final double OUTTAKE_KI = 0;
+		public static final double OUTTAKE_KD = 0;
+		public static final int FEEDER_SPEED = 1;
+		public static final int DELAY = 0;
 	}
 }
 //#endregion
