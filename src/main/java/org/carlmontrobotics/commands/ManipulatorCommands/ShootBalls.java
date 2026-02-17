@@ -34,7 +34,7 @@ public class ShootBalls extends Command {
   @Override
   public void execute() {
     if(timer.get() > OuttakeC.DELAY){
-    outtake.spinOuttake(OuttakeC.OUTTAKE_SPEED);
+    outtake.spinOuttake(OuttakeC.OUTTAKE_RPM);
     }
   }
 
