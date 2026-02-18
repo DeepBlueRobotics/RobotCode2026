@@ -73,6 +73,7 @@ public class RobotContainer {
 
     public final Limelight limelight = new Limelight();
     public final Drivetrain drivetrain =  new Drivetrain(limelight);
+    public final Shooter shooter = new Shooter();
 
 
     private SendableChooser<Command> autoChooser = new SendableChooser<>();   
@@ -86,16 +87,12 @@ public class RobotContainer {
 
         SmartDashboard.putData("Auto Chooser", autoChooser); 
 
-        SmartDashboard.putBoolean("AlignOverride", alignOverride);
-        SmartDashboard.putBoolean("AutoScoring", autoScoring);
-        SmartDashboard.putBoolean("AlignOverride", true);
         //#endregion
         setDefaultCommands();
         setBindingsDriver();
         setBindingsManipulator();
 
         SmartDashboard.putBoolean("Baby Mode", Config.CONFIG.isBabyMode());
-        // SmartDashboard.putData("Rotate Command",new RotateToTag(drivetrain, limelight));
         SmartDashboard.putString("Alliance", DriverStation.getAlliance().toString());
         SmartDashboard.putString("Location", DriverStation.getLocation().toString());
         SmartDashboard.putBoolean("Connected to FMS?", DriverStation.isFMSAttached());
@@ -105,7 +102,7 @@ public class RobotContainer {
    
     //#region ButtonBindings
     private void setBindingsDriver() {
-        new JoystickButton(driverController, Driver.resetFieldOrientationButton)
+        new POVButton(driverController, Driver.resetFieldOrientationButton)
             .onTrue(new InstantCommand(drivetrain::resetFieldOrientation));
         axisTrigger(driverController, Driver.RIGHT_TRIGGER_BUTTON, 0.2)
             .onTrue(new InstantCommand(()->drivetrain.setFieldOriented(false)))
@@ -127,12 +124,13 @@ public class RobotContainer {
   private void setDefaultCommands() {
     drivetrain.setDefaultCommand(new TeleopDrive(
       drivetrain,
+      shooter,
       () -> ProcessedAxisValue(driverController, Axis.kLeftY),//.06 drift purple, .10 drift black
       () -> ProcessedAxisValue(driverController, Axis.kLeftX),
       () -> ProcessedAxisValue(driverController, Axis.kRightX),
       () -> driverController.getRawButton(OI.Driver.slowDriveButton),
-      manipulatorController,
-      () -> SmartDashboard.getBoolean("Baby Mode", Config.CONFIG.isBabyMode())
+      () -> SmartDashboard.getBoolean("Baby Mode", Config.CONFIG.isBabyMode()),
+      () -> driverController.getRawButton(OI.Driver.shootOnFlyButton)
       ));
   }
   //#endregion

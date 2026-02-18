@@ -3,6 +3,7 @@ package org.carlmontrobotics.commands.ShooterCommands;
 import static org.carlmontrobotics.Constants.Shooterc.*;
 
 public class ShotCalculator {
+    private static double clearanceSafety = 0.1651;           // extra margin (m)
 
     public static class ShotResult {
         public double requiredRPM;
@@ -16,10 +17,8 @@ public class ShotCalculator {
     public static ShotResult calculateShot(
             double dx, double dy, double dz,          // displacement to goal (m)
             double vxRobot, double vyRobot,           // robot velocity field-relative (m/s)
-            double wheelRadiusMeters,                 // flywheel radius
             double[] obstacleDistances,               // horizontal distance to each obstacle
-            double[] obstacleHeights,                 // required height at each obstacle
-            double clearanceSafety                    // extra margin (m)
+            double[] obstacleHeights                 // required height at each obstacle
     ) {
 
         ShotResult result = new ShotResult();

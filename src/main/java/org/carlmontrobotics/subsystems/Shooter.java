@@ -55,16 +55,20 @@ public class Shooter extends SubsystemBase {
   }
 
   public void setVoltage(double voltage) {
-    masterShooter.setVoltage(voltage);
+    pidController.setSetpoint(voltage, ControlType.kVoltage);
   }
 
   public void setVoltagePercentage(double percentage) {
-    masterShooter.set(percentage);
+    pidController.setSetpoint(percentage, ControlType.kDutyCycle);
   }
 
   public void setRPMGoal(double goal) {
     shooterGoal = goal;
     pidController.setSetpoint(goal, ControlType.kVelocity);
+  }
+
+  public void stop() {
+    pidController.setSetpoint(0, ControlType.kDutyCycle);
   }
 
   public void turnOnManualMode() {

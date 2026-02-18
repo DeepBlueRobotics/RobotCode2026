@@ -10,11 +10,14 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.path.PathConstraints;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController.Axis;
 import edu.wpi.first.wpilibj.XboxController.Button;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.math.util.Units;
 import static org.carlmontrobotics.Config.CONFIG;
 
@@ -38,7 +41,8 @@ public final class Constants {
 			public static final int port = 0;
 
 			public static final int slowDriveButton = Button.kLeftBumper.value;
-			public static final int resetFieldOrientationButton = Button.kRightBumper.value;
+			public static final int shootOnFlyButton = Button.kRightBumper.value;
+			public static final int resetFieldOrientationButton = 180; //down dpad
 			public static final Axis RIGHT_TRIGGER_BUTTON = Axis.kRightTrigger;
 			public static final Axis LEFT_TRIGGER_BUTTON = Axis.kLeftTrigger;
 
@@ -270,14 +274,24 @@ public final class Constants {
 	}
 
 	public static class Shooterc {
-		public static final int masterID = 1;
-		public static final boolean masterInverted = false;
-		public static final int followerID = 2;
-		public static final double kP = 2;
-		public static final double kI = 0;
-		public static final double kD = 0; 
+		public static final int masterID = 1; //TODO
+		public static final boolean masterInverted = false; //TODO
+		public static final int followerID = 2; //TODO
+		public static final double kP = 2; //TODO
+		public static final double kI = 0; //TODO
+		public static final double kD = 0; //TODO
 		public static final double gearReduction = 1;
-		public static final double launchAngleRad = Math.PI/4;
+		public static final double launchAngleRad = Math.PI/4; //TODO figure out real value
+		public static final double wheelRadiusMeters = 0.3; //TODO figure out real value
+		public static final double passiveVelocity = 100; //TODO
+		public static final double thetaAlignP = 1; //TODO
+		public static final double toleranceRad = Math.PI/90; //Looks right
+
+		//Poses
+		public static final Pose2d centerOfRedGoal2d = new Pose2d();
+		public static final Pose2d centerOfBlueGoal2d = new Pose2d();
+		public static final Pose3d centerOfRedGoal3d = new Pose3d();
+		public static final Pose3d centerOfBlueGoal3d = new Pose3d();
 	}
 }
 //#endregion

@@ -1,24 +1,37 @@
 package org.carlmontrobotics.commands.DriveCommands;
 
 import static org.carlmontrobotics.Constants.Drivetrainc.*;
+import static org.carlmontrobotics.Constants.Shooterc.centerOfBlueGoal2d;
+import static org.carlmontrobotics.Constants.Shooterc.centerOfRedGoal2d;
+import static org.carlmontrobotics.Constants.Shooterc.passiveVelocity;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import org.carlmontrobotics.Constants;
 import org.carlmontrobotics.Robot;
+import org.carlmontrobotics.commands.ShooterCommands.HeadingAlignController;
+import org.carlmontrobotics.commands.ShooterCommands.HexClosest;
+import org.carlmontrobotics.commands.ShooterCommands.ShotCalculator;
 import org.carlmontrobotics.subsystems.Drivetrain;
+import org.carlmontrobotics.subsystems.Shooter;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
 public class TeleopDrive extends Command {
 
   private static double robotPeriod = Robot.kDefaultPeriod;
-  private final Drivetrain drivetrain;
+  private final Drivetrain dt;
+  private final Shooter shooter;
   private DoubleSupplier fwd;
   private DoubleSupplier str;
   private DoubleSupplier rcw;
@@ -26,21 +39,23 @@ public class TeleopDrive extends Command {
   private double currentForwardVel = 0;
   private double currentStrafeVel = 0;
   private double prevTimestamp;
-  GenericHID manipulatorController;
-  BooleanSupplier babyModeSupplier;
+  private BooleanSupplier babyModeSupplier;
+  private BooleanSupplier shootOnFly;
+
+  private boolean isRed = false; 
 
   /**
    * Creates a new TeleopDrive.
    */
-  public TeleopDrive(Drivetrain drivetrain, DoubleSupplier fwd, DoubleSupplier str, DoubleSupplier rcw,
-      BooleanSupplier slow, GenericHID manipulatorController, BooleanSupplier babyModeSupplier) {
-    addRequirements(this.drivetrain = drivetrain);
+  public TeleopDrive(Drivetrain drivetrain, Shooter shooter, DoubleSupplier fwd, DoubleSupplier str, DoubleSupplier rcw,
+      BooleanSupplier slow, BooleanSupplier babyModeSupplier, BooleanSupplier shootOnFly) {
+    addRequirements(this.dt = drivetrain, this.shooter = shooter);
     this.fwd = fwd;
     this.str = str;
     this.rcw = rcw;
     this.slow = slow;
-    this.manipulatorController = manipulatorController;
     this.babyModeSupplier = babyModeSupplier;
+    this.shootOnFly = shootOnFly;
   }
 
   // Called when the command is initially scheduled.
@@ -51,6 +66,9 @@ public class TeleopDrive extends Command {
     // SmartDashboard.putNumber("normal turn const", kNormalDriveRotation);
     // SmartDashboard.putNumber("normal speed const", kNormalDriveSpeed);
     prevTimestamp = Timer.getFPGATimestamp();
+    isRed = DriverStation.getAlliance()
+      .map(a -> a == DriverStation.Alliance.Red)
+      .orElse(false);   // default when unknown
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -58,22 +76,32 @@ public class TeleopDrive extends Command {
   public void execute() {
     double currentTime = Timer.getFPGATimestamp();
     robotPeriod = currentTime - prevTimestamp;
-    if (!hasDriverInput()) {
-      drivetrain.drive(0,0,0);
+    double[] speeds = getRequestedSpeeds();
+    prevTimestamp = currentTime;
+    if (shootOnFly.getAsBoolean()) {
+      Pose2d currentPose2d = dt.getDrivetrainPosition();
+      double rotation = calculateRotationToAlign(currentPose2d);
+      boolean alignedForShot = calculateAlignmentValid(currentPose2d);
+      if (alignedForShot) {
+        ShotCalculator.ShotResult shotResult = calculateShotVelocity();
+        if (shotResult.impossible) {
+          shooter.setRPMGoal(passiveVelocity);
+          dt.drive(speeds[0], speeds[1], rotation);     
+        }
+        else {
+          double shotVelocity = shotResult.requiredRPM;
+        shooter.setRPMGoal(shotVelocity);
+        dt.drive(speeds[0], speeds[1], rotation);     
+        } 
+      }
+      else {
+        shooter.setRPMGoal(passiveVelocity);
+        dt.drive(speeds[0], speeds[1], rotation);     
+      }
     }
     else {
-    double[] speeds = getRequestedSpeeds();
-    // SmartDashboard.putNumber("Elapsed time", currentTime - prevTimestamp);
-    prevTimestamp = currentTime;
-    // kSlowDriveRotation = SmartDashboard.getNumber("slow turn const", kSlowDriveRotation);
-    // kSlowDriveSpeed = SmartDashboard.getNumber("slow speed const", kSlowDriveSpeed);
-    // kNormalDriveRotation = SmartDashboard.getNumber("normal turn const", kNormalDriveRotation);
-    // kNormalDriveSpeed = SmartDashboard.getNumber("normal speed const", kNormalDriveSpeed);
-
-    // SmartDashboard.putNumber("fwd", speeds[0]);
-    // SmartDashboard.putNumber("strafe", speeds[1]);
-    // SmartDashboard.putNumber("turn", speeds[2]);
-      drivetrain.drive(speeds[0], speeds[1], speeds[2]);
+      shooter.stop();
+      dt.drive(speeds[0], speeds[1], speeds[2]);
     }
   }
 
@@ -85,49 +113,21 @@ public class TeleopDrive extends Command {
     double forward = fwd.getAsDouble();
     double strafe = str.getAsDouble();
     double rotateClockwise = rcw.getAsDouble();
-    // SmartDashboard.putNumber("fwdIN", forward);
-    // SmartDashboard.putNumber("strafeIN", strafe);
-    // SmartDashboard.putNumber("turnIN", rotateClockwise);
-    // System.out.println("fwd str rcw: "+forward+", "+strafe+", "+rotateClockwise);
-    boolean slow2 = slow.getAsBoolean();
+    //boolean slow2 = slow.getAsBoolean(); gets not used ig
     forward *= maxForward;
     strafe *= maxStrafe;
     rotateClockwise *= maxRCW;
-
-    // System.out.println("teleopDrive ExtraSpeedMult%: "+drivetrain.extraSpeedMult);
     double driveMultiplier = (slow.getAsBoolean() ? kSlowDriveSpeed : kNormalDriveSpeed);
-    double rotationMultiplier = drivetrain.extraSpeedMult + (slow.getAsBoolean() ? kSlowDriveRotation : kNormalDriveRotation);
-    // double driveMultiplier = (slow.getAsBoolean() ? kSlowDriveSpeed : kNormalDriveSpeed);
-    // double rotationMultiplier = (slow.getAsBoolean() ? kSlowDriveRotation : kNormalDriveRotation);
-    
+    double rotationMultiplier = dt.extraSpeedMult + (slow.getAsBoolean() ? kSlowDriveRotation : kNormalDriveRotation);
     if(babyModeSupplier.getAsBoolean()){
       driveMultiplier = kBabyDriveSpeed; 
       rotationMultiplier = kBabyDriveRotation;
     }
-    // double driveMultiplier = kNormalDriveSpeed;
-    // double rotationMultiplier = kNormalDriveRotation;
-
     forward *= driveMultiplier;
     strafe *= driveMultiplier;
     rotateClockwise *= rotationMultiplier;
-
-    // Limit acceleration of the robot
-    // double accelerationX = (forward - currentForwardVel) / robotPeriod;
-    // double accelerationY = (strafe - currentStrafeVel) / robotPeriod;
-    // double translationalAcceleration = Math.hypot(accelerationX, accelerationY);
-    // SmartDashboard.putNumber("Translational Acceleration", translationalAcceleration);
-    // if (translationalAcceleration > autoMaxAccelMps2 && false) {//DOES NOT RUN!!
-    //   Translation2d limitedAccelerationVector = new Translation2d(autoMaxAccelMps2,
-    //       Rotation2d.fromRadians(Math.atan2(accelerationY, accelerationX)));
-    //   Translation2d limitedVelocityVector = limitedAccelerationVector.times(robotPeriod);
-    //   currentForwardVel += limitedVelocityVector.getX();
-    //   currentStrafeVel += limitedVelocityVector.getY();
-    // } else {
     currentForwardVel = forward;
     currentStrafeVel = strafe;
-    // }
-    // SmartDashboard.putNumber("current velocity", Math.hypot(currentForwardVel, currentStrafeVel));
-
     return new double[] { currentForwardVel, currentStrafeVel, -rotateClockwise };
   }
 
@@ -135,6 +135,42 @@ public class TeleopDrive extends Command {
     return MathUtil.applyDeadband(fwd.getAsDouble(), Constants.OI.JOY_THRESH)!=0
         || MathUtil.applyDeadband(str.getAsDouble(), Constants.OI.JOY_THRESH)!=0
         || MathUtil.applyDeadband(rcw.getAsDouble(), Constants.OI.JOY_THRESH)!=0;
+  }
+
+
+  private double calculateRotationToAlign(Pose2d currentPose2d) {
+    if (isRed) {
+        return HeadingAlignController.calculateOmega(currentPose2d, centerOfRedGoal2d);
+    }
+    else {
+        return HeadingAlignController.calculateOmega(currentPose2d, centerOfBlueGoal2d);
+    }
+  }
+
+  private boolean calculateAlignmentValid(Pose2d currentPose2d) {
+    if (isRed) {
+        return HeadingAlignController.atGoal(currentPose2d, centerOfRedGoal2d);
+    }
+    else {
+        return HeadingAlignController.atGoal(currentPose2d, centerOfBlueGoal2d);
+    }
+  }
+
+  private ShotCalculator.ShotResult calculateShotVelocity() {
+    Pose3d goalPose = isRed ? new Pose3d(11.916, 4.038, 1.8237877672, new Rotation3d()) : new Pose3d(4.618, 4.038, 1.8237877672, new Rotation3d());
+    Pose2d current2dPose = dt.getDrivetrainPosition();
+    Pose3d current3dPose = new Pose3d(current2dPose);
+    double[] velocityVectors = dt.getDrivetrainVelocity();
+    double shooterVelocity = shooter.getVelocity();
+    velocityVectors[0] += shooterVelocity * Math.cos(current2dPose.getRotation().getRadians());
+    velocityVectors[1] += shooterVelocity * Math.sin(current2dPose.getRotation().getRadians());
+    Translation3d path = goalPose.getTranslation().minus(current3dPose.getTranslation());
+    Translation2d closestObstacle = HexClosest.closestVectorToHex(current2dPose, isRed);
+    double[] obstacleDistances = {closestObstacle.getX(), closestObstacle.getY()};
+    double[] obstacleHeights = {Units.inchesToMeters(72), Units.inchesToMeters(72)};
+    ShotCalculator.ShotResult speed = ShotCalculator.calculateShot(path.getX(), path.getY(), path.getZ(), velocityVectors[0], velocityVectors[1], obstacleDistances, obstacleHeights);
+    
+    return speed;
   }
 
   // Called once the command ends or is interrupted.
