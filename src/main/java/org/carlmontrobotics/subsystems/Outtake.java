@@ -34,7 +34,7 @@ public class Outtake extends SubsystemBase {
   }
 
   public void spinOuttake(double input) {
-    pidController.setSetpoint(input, ControlType.kVelocity);
+    pidController.setSetpoint(input, ControlType.kDutyCycle);
   }
 
   public void spinFeeder(double input) {
