@@ -129,7 +129,10 @@ public class RobotContainer {
       drivetrain,
       () -> ProcessedAxisValue(driverController, Axis.kLeftY),//.06 drift purple, .10 drift black
       () -> ProcessedAxisValue(driverController, Axis.kLeftX),
-      () -> ProcessedAxisValue(driverController, Axis.kRightX),
+      () -> MathUtil.clamp(
+        ProcessedAxisValue(manipulatorController, Axis.kRightX)
+        + ProcessedAxisValue(driverController, Axis.kRightX),
+        -1, 1),
       () -> driverController.getRawButton(OI.Driver.slowDriveButton),
       manipulatorController,
       () -> SmartDashboard.getBoolean("Baby Mode", Config.CONFIG.isBabyMode())
